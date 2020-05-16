@@ -4,7 +4,7 @@ function moduleTest() {
 
 let a = 5;
 
-export { a };   
+export { a };
 module.exports = moduleTest;
 
 
