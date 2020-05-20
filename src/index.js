@@ -1,6 +1,6 @@
 'use strict';
 
-// Popup Call
+// Popup Call   +++
 const callBtn = () => {
 
     const callBtn = document.querySelectorAll('.call-btn'),
@@ -25,7 +25,7 @@ const callBtn = () => {
 };
 callBtn();
 
-// Accordion Common Questions
+// Accordion Common Questions   +++
 const accor = () => {
 
     const accordion = document.getElementById('accordion-two'),
@@ -59,7 +59,7 @@ const accor = () => {
 };
 accor();
 
-// Sentence Block
+// Sentence Block   +++
 const sentenceBlock = () => {
 
     const btn = document.querySelector('.add-sentence-btn'),
@@ -146,7 +146,6 @@ const calc = () => {
         accBtn = document.querySelectorAll('.construct-btn'),
         accHeader = document.querySelectorAll('.panel-heading'),
         accBody = document.querySelectorAll('.panel-collapse');
-    let turn = 0;
 
     accordion.addEventListener('click', event => {
         event.preventDefault();
@@ -167,12 +166,24 @@ const calc = () => {
     accBtn.forEach(item => {
         item.addEventListener('click', event => {
             let target = event.target;
-            target = target.closest('.construct-btn');
-            console.log(target);
 
+            if (target.closest('.construct-btn') && !target.matches('.call-btn')) {
+                event.preventDefault();
+
+                const currentPanel = target.closest('.panel-collapse');
+                currentPanel.classList.remove('in');
+
+                const NextPanel = currentPanel.closest('.panel').nextElementSibling;
+                NextPanel.querySelector('.panel-collapse').classList.add('in');
+
+            } else if (target.closest('.construct-btn')) {
+                target = target.closest('.construct-btn');
+            }
 
         });
+
     });
+
 
 };
 calc();
@@ -180,45 +191,78 @@ calc();
 // Main Form
 const mainForm = () => {
 
-    const form = document.querySelector('.main-form'),
-        btn = document.querySelector('.main-form-btn'),
+    const btn = document.querySelector('.main-form-btn'),
         input = document.querySelector('.phone-user');
 
-    const errorMessage = 'Something goes wrong',
-        successMessage = 'We will contact you soon',
-        loadMessage = 'Loading...';
+    const errorMessage = 'Something gone wrong!',
+        loadMessage = 'Loading...',
+        successMessage = 'Thanks, We will contact you!';
 
-
+    const forms = document.querySelectorAll('form');
     const statusMessage = document.createElement('div');
+    statusMessage.style.cssText = 'font-size: 2rem;';
 
-
-    form.addEventListener('submit', event => {
-        event.preventDefault();
-        form.append(statusMessage);
-
+    const postData = (body, outputData, errorData) => {
         const request = new XMLHttpRequest();
         request.addEventListener('readystatechange', () => {
-            statusMessage.textContent = loadMessage;
             if (request.readyState !== 4) {
                 return;
             }
             if (request.status === 200) {
-                statusMessage.textContent = successMessage;
+                outputData();
             } else {
-                statusMessage.textContent = errorMessage;
+                errorData(request.status);
+            }
+        });
+        request.open('POST', './server.php');
+        request.setRequestHeader('Content-Type', 'multipart/json');
+
+        request.send(JSON.stringify(body));
+    };
+
+    forms.forEach(form => {
+        form.addEventListener('input', event => {
+            const target = event.target;
+            if (target.name === 'user_phone') {
+                target.value = target.value.replace(/[^\+\d]/g, '');
+            }
+            if (target.name === 'user_name' || target.name === 'user_message') {
+                target.value = target.value.replace(/[^а-я ]/gi, '');
             }
         });
 
-        request.open('POST', './server.php', true);
-        request.setRequestHeader('Content-Type', 'multipart/form-data');
-        const formData = new FormData(form);
-        request.send(formData);
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            form.append(statusMessage);
+            statusMessage.style.cssText = `font-size: 2rem; color: #grey; `;
+            const formData = new FormData(form);
+            statusMessage.textContent = loadMessage;
 
+            const body = {};
+            for (const val of formData.entries()) {
+                body[val[0]] = val[1];
 
+                if (form[2]) {
+                    body[val[0]] = val[1];
+                    body[val[0]] = val[1];
+
+                }
+            }
+            postData(body,
+                () => {
+                    statusMessage.style.cssText = `font-size: 2rem; color: grey;`;
+                    statusMessage.textContent = successMessage;
+                    form.reset();
+                },
+                error => {
+                    statusMessage.style.cssText = `font-size: 2rem; color: red;`;
+                    statusMessage.textContent = errorMessage;
+                });
+        });
     });
-
-
-
 
 };
 mainForm();
+
+
+
